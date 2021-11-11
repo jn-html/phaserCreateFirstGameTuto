@@ -19,6 +19,7 @@ var config = {
 };
 
 var player;
+var stars;
 var platforms;
 var cursors;
 
@@ -74,34 +75,57 @@ function preload () {
             repeat: -1
         });
 
+        // keyboard event listener
         cursors = this.input.keyboard.createCursorKeys();
 
-        this.physics.add.collider(player, platforms);
+        // Star Popping Logic
+        stars = this.physics.add.group({
+          key: 'star',
+          // 1 child +11 repeat = 12
+          repeat: 11,
+          // x +70 for each repeat
+          setXY: { x: 12, y: 0, stepX: 70 }
+      });
+
+      // iterate each child for bounce
+      stars.children.iterate(function (child) {
+
+          child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+
+      });
+
+      // player collider with platforms
+      this.physics.add.collider(player, platforms);
+      // Star and Ground Collider
+      this.physics.add.collider(stars, platforms);
+      // check to see if the player overlaps with a star
+      this.physics.add.overlap(player, stars, collectStar, null, this);
         
     }
 
 function update () {
-  if (cursors.left.isDown)
-        {
-            player.setVelocityX(-160);
 
-            player.anims.play('left', true);
-        }
-        else if (cursors.right.isDown)
-        {
-            player.setVelocityX(160);
+  // Movement Logic
+  if (cursors.left.isDown) {
+    player.setVelocityX(-160);
+    player.anims.play('left', true);
+    }
+    else if (cursors.right.isDown) {
+      player.setVelocityX(160);
+      player.anims.play('right', true);
+    }
+    else {
+      player.setVelocityX(0);
+      player.anims.play('turn');
+    }
 
-            player.anims.play('right', true);
-        }
-        else
-        {
-            player.setVelocityX(0);
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.setVelocityY(-330);
+    }
 
-            player.anims.play('turn');
-        }
-
-        if (cursors.up.isDown && player.body.touching.down)
-        {
-            player.setVelocityY(-330);
-        }
+  }
+  // When start collected, it delete
+  function collectStar (player, star) {
+  star.disableBody(true, true);
 }
